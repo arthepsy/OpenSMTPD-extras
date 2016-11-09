@@ -24,6 +24,10 @@ if HAVE_FILTER_PAUSE
 SUBDIRS	+=	filter-pause
 endif
 
+if HAVE_FILTER_PERL
+SUBDIRS	+=	filter-perl
+endif
+
 if HAVE_FILTER_STUB
 SUBDIRS	+=	filter-stub
 endif
