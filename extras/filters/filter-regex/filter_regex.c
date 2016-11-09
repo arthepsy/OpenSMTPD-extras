@@ -39,6 +39,11 @@ struct regex {
 	regex_t p;
 };
 
+struct regex_tx {
+	int m;
+	size_t l;
+};
+
 static SIMPLEQ_HEAD(regex_q, regex)
 	regex_connect = SIMPLEQ_HEAD_INITIALIZER(regex_connect),
 	regex_helo = SIMPLEQ_HEAD_INITIALIZER(regex_helo),
@@ -158,6 +163,23 @@ regex_clear(void)
 	}
 }
 
+static void *
+regex_tx_alloc(uint64_t id)
+{
+	struct regex_tx	*tx;
+
+	tx = xcalloc(1, sizeof *tx, "regex_tx_alloc");
+	tx->m = 0;
+
+	return tx;
+}
+
+static void
+regex_tx_free(void *ctx)
+{
+	free(ctx);
+}
+
 static int
 regex_on_connect(uint64_t id, struct filter_connect *c)
 {
@@ -201,45 +223,26 @@ regex_on_rcpt(uint64_t id, struct mailaddr *r)
 static void
 regex_on_msg_line(uint64_t id, const char *l)
 {
-	struct { int m; size_t l; } *u;
+	struct regex_tx	*tx;
 
 	filter_api_writeln(id, l);
-	if ((u = filter_api_get_udata(id)) == NULL) {
-		u = xcalloc(1, sizeof(*u), "on_msg_line");
-		filter_api_set_udata(id, u);
-	}
-	u->l += strlen(l);
-	if (u->m || (regex_limit && u->l >= regex_limit))
+	tx = filter_api_transaction(id);
+	tx->l += strlen(l);
+	if (tx->m || (regex_limit && tx->l >= regex_limit))
 		return;
-	u->m = regex_match(&regex_msg_line, l);
+	tx->m = regex_match(&regex_msg_line, l);
 }
 
 static int
 regex_on_msg_end(uint64_t id, size_t size)
 {
-	int *m;
+	struct regex_tx	*tx;
 
-	if ((m = filter_api_get_udata(id)) == NULL)
-		return filter_api_accept(id);
-	if (*m) {
+	if (tx->m) {
 		log_warnx("warn: session %016"PRIx64": on_msg_end: REJECT msg_line", id);
 		return filter_api_reject_code(id, FILTER_CLOSE, 554, "5.7.1 Message content rejected");
 	}
 	return filter_api_accept(id);
-}
-
-static void
-regex_on_tx_commit(uint64_t id)
-{
-	free(filter_api_get_udata(id));
-	filter_api_set_udata(id, NULL);
-}
-
-static void
-regex_on_tx_rollback(uint64_t id)
-{
-	free(filter_api_get_udata(id));
-	filter_api_set_udata(id, NULL);
 }
 
 int
@@ -291,8 +294,9 @@ main(int argc, char **argv)
 	filter_api_on_rcpt(regex_on_rcpt);
 	filter_api_on_msg_line(regex_on_msg_line);
 	filter_api_on_msg_end(regex_on_msg_end);
-	filter_api_on_tx_commit(regex_on_tx_commit);
-	filter_api_on_tx_rollback(regex_on_tx_rollback);
+
+	filter_api_transaction_allocator(regex_tx_alloc);
+	filter_api_transaction_destructor(regex_tx_free);
 
 	filter_api_loop();
 	regex_clear();
