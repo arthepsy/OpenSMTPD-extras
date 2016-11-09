@@ -1008,6 +1008,19 @@ AC_ARG_WITH([filter-clamav],
 )
 AM_CONDITIONAL([HAVE_FILTER_CLAMAV], [test $HAVE_FILTER_CLAMAV = yes])
 
+HAVE_FILTER_DKIM_SIGNER=no
+AC_ARG_WITH([filter-dkim-signer],
+	[  --with-filter-dkim-signer	Enable filter dkim-signer],
+	[
+		if test "x$withval" != "xno" ; then
+			AC_DEFINE([HAVE_FILTER_DKIM_SIGNER], [1],
+				[Define if you have filter dkim-signer])
+			HAVE_FILTER_DKIM_SIGNER=yes
+		fi
+	]
+)
+AM_CONDITIONAL([HAVE_FILTER_DKIM_SIGNER], [test $HAVE_FILTER_DKIM_SIGNER = yes])
+
 HAVE_FILTER_MONKEY=no
 AC_ARG_WITH([filter-monkey],
 	[  --with-filter-monkey	Enable filter monkey],
@@ -1570,6 +1583,7 @@ AC_CONFIG_FILES([Makefile
 
 		extras/filters/Makefile
 		extras/filters/filter-clamav/Makefile
+		extras/filters/filter-dkim-signer/Makefile
 		extras/filters/filter-monkey/Makefile
 		extras/filters/filter-stub/Makefile
 		extras/filters/filter-trace/Makefile
