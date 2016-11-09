@@ -1086,6 +1086,19 @@ AC_ARG_WITH([filter-perl],
 )
 AM_CONDITIONAL([HAVE_FILTER_PERL], [test $HAVE_FILTER_PERL = yes])
 
+HAVE_FILTER_PYTHON=no
+AC_ARG_WITH([filter-python],
+	[  --with-filter-python	Enable filter python],
+	[
+		if test "x$withval" != "xno" ; then
+			AC_DEFINE([HAVE_FILTER_PYTHON], [1],
+				[Define if you have filter python])
+			HAVE_FILTER_PYTHON=yes
+		fi
+	]
+)
+AM_CONDITIONAL([HAVE_FILTER_PYTHON], [test $HAVE_FILTER_PYTHON = yes])
+
 HAVE_FILTER_STUB=no
 AC_ARG_WITH([filter-stub],
 	[  --with-filter-stub	Enable filter stub],
@@ -1641,6 +1654,7 @@ AC_CONFIG_FILES([Makefile
 		extras/filters/filter-monkey/Makefile
 		extras/filters/filter-pause/Makefile
 		extras/filters/filter-perl/Makefile
+		extras/filters/filter-python/Makefile
 		extras/filters/filter-stub/Makefile
 		extras/filters/filter-trace/Makefile
 		extras/filters/filter-void/Makefile
