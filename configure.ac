@@ -1034,6 +1034,19 @@ AC_ARG_WITH([filter-dnsbl],
 )
 AM_CONDITIONAL([HAVE_FILTER_DNSBL], [test $HAVE_FILTER_DNSBL = yes])
 
+HAVE_FILTER_LUA=no
+AC_ARG_WITH([filter-lua],
+	[  --with-filter-lua	Enable filter lua],
+	[
+		if test "x$withval" != "xno" ; then
+			AC_DEFINE([HAVE_FILTER_LUA], [1],
+				[Define if you have filter lua])
+			HAVE_FILTER_LUA=yes
+		fi
+	]
+)
+AM_CONDITIONAL([HAVE_FILTER_LUA], [test $HAVE_FILTER_LUA = yes])
+
 HAVE_FILTER_MONKEY=no
 AC_ARG_WITH([filter-monkey],
 	[  --with-filter-monkey	Enable filter monkey],
@@ -1598,6 +1611,7 @@ AC_CONFIG_FILES([Makefile
 		extras/filters/filter-clamav/Makefile
 		extras/filters/filter-dkim-signer/Makefile
 		extras/filters/filter-dnsbl/Makefile
+		extras/filters/filter-lua/Makefile
 		extras/filters/filter-monkey/Makefile
 		extras/filters/filter-stub/Makefile
 		extras/filters/filter-trace/Makefile
