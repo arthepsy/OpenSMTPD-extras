@@ -643,6 +643,37 @@ AC_DEFINE_UNQUOTED([SMTPD_USER], ["$SMTPD_USER"],
 	[non-privileged user for privilege separation])
 AC_SUBST([SMTPD_USER])
 
+SMTPD_QUEUE_USER=_smtpq
+AC_ARG_WITH([user-queue],
+	[  --with-user-queue=user	Specify non-privileged user for queue process (default=_smtpq)],
+	[
+		if test -n "$withval" -a "$withval" != "no" -a "${withval}" != "yes"; then
+			SMTPD_QUEUE_USER=$withval
+		fi
+	]
+)
+AC_DEFINE_UNQUOTED([SMTPD_QUEUE_USER], ["$SMTPD_QUEUE_USER"],
+	[non-privileged user for queue process])
+AC_SUBST([SMTPD_QUEUE_USER])
+
+# Where to place spooler
+spooldir=/var/spool/smtpd
+AC_ARG_WITH([path-queue],
+	[  --with-path-queue=PATH	Specify path to queue directory (default=/var/spool/smtpd)],
+	[
+		if test -n "$withval" -a "$withval" != "no" -a "${withval}" != "yes"; then
+			spooldir=$withval
+			if test ! -d $spooldir; then
+			AC_MSG_WARN([** no $spooldir directory on this system **])
+			fi
+		fi
+	]
+)
+
+AC_DEFINE_UNQUOTED([PATH_SPOOL], ["$spooldir"], 
+	[Specify location of spooler])
+AC_SUBST([spooldir])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
