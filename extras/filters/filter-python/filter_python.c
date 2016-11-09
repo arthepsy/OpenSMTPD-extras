@@ -37,8 +37,8 @@ static PyObject	*py_on_helo;
 static PyObject	*py_on_mail;
 static PyObject	*py_on_rcpt;
 static PyObject	*py_on_data;
-static PyObject	*py_on_eom;
-static PyObject	*py_on_dataline;
+static PyObject	*py_on_msg_end;
+static PyObject	*py_on_msg_line;
 
 static PyObject	*py_on_tx_begin;
 static PyObject	*py_on_tx_commit;
@@ -253,7 +253,7 @@ on_data(uint64_t id)
 }
 
 static int
-on_eom(uint64_t id, size_t sz)
+on_msg_end(uint64_t id, size_t sz)
 {
 	PyObject *py_args;
 	PyObject *py_ret;
@@ -265,12 +265,12 @@ on_eom(uint64_t id, size_t sz)
 	py_sz   = PyLong_FromSize_t(sz);
 	PyTuple_SetItem(py_args, 0, py_id);
 	PyTuple_SetItem(py_args, 1, py_sz);
-	py_ret = PyObject_CallObject(py_on_eom, py_args);
+	py_ret = PyObject_CallObject(py_on_msg_end, py_args);
 	Py_DECREF(py_args);
 
 	if (py_ret == NULL) {
 		PyErr_Print();
-		log_warnx("warn: on_eom: handler failed");
+		log_warnx("warn: on_msg_end: handler failed");
 		exit(1);
 	}
 
@@ -358,7 +358,7 @@ on_disconnect(uint64_t id)
 }
 
 static void
-on_dataline(uint64_t id, const char *line)
+on_msg_line(uint64_t id, const char *line)
 {
 	PyObject *py_args;
 	PyObject *py_ret;
@@ -372,12 +372,12 @@ on_dataline(uint64_t id, const char *line)
 	PyTuple_SetItem(py_args, 0, py_id);
 	PyTuple_SetItem(py_args, 1, py_line);
 
-	py_ret = PyObject_CallObject(py_on_dataline, py_args);
+	py_ret = PyObject_CallObject(py_on_msg_line, py_args);
 	Py_DECREF(py_args);
 
 	if (py_ret == NULL) {
 		PyErr_Print();
-		log_warnx("warn: on_dataline: handler failed");
+		log_warnx("warn: on_msg_line: handler failed");
 		exit(1);
 	}
 }
@@ -502,9 +502,9 @@ main(int argc, char **argv)
 	if (py_on_data && PyCallable_Check(py_on_data))
 		filter_api_on_data(on_data);
 
-	py_on_eom = PyObject_GetAttrString(module, "on_eom");
-	if (py_on_eom && PyCallable_Check(py_on_eom))
-		filter_api_on_eom(on_eom);
+	py_on_msg_end = PyObject_GetAttrString(module, "on_msg_end");
+	if (py_on_msg_end && PyCallable_Check(py_on_msg_end))
+		filter_api_on_msg_end(on_msg_end);
 
 	py_on_tx_begin = PyObject_GetAttrString(module, "on_tx_begin");
 	if (py_on_tx_begin && PyCallable_Check(py_on_tx_begin))
@@ -518,9 +518,9 @@ main(int argc, char **argv)
 	if (py_on_tx_rollback && PyCallable_Check(py_on_tx_rollback))
 		filter_api_on_tx_rollback(on_tx_rollback);
 
-	py_on_dataline = PyObject_GetAttrString(module, "on_dataline");
-	if (py_on_dataline && PyCallable_Check(py_on_dataline))
-		filter_api_on_dataline(on_dataline);
+	py_on_msg_line = PyObject_GetAttrString(module, "on_msg_line");
+	if (py_on_msg_line && PyCallable_Check(py_on_msg_line))
+		filter_api_on_msg_line(on_msg_line);
 
 	py_on_disconnect = PyObject_GetAttrString(module, "on_disconnect");
 	if (py_on_disconnect && PyCallable_Check(py_on_disconnect))

@@ -243,33 +243,33 @@ on_data(uint64_t id)
 }
 
 static void
-on_dataline(uint64_t id, const char *line)
+on_msg_line(uint64_t id, const char *line)
 {
 	char	s_id[ID_STR_SZ];
 
 	(void)snprintf(s_id, sizeof(s_id), "%016"PRIx64"", id);
-	lua_getglobal(L, "on_dataline");
+	lua_getglobal(L, "on_msg_line");
 	lua_pushstring(L, s_id);
 	lua_pushstring(L, line);
 
 	if (lua_pcall(L, 2, 0, 0)) {
-		log_warnx("warn: on_dataline: %s",
+		log_warnx("warn: on_msg_line: %s",
 		    lua_tostring(L, -1));
 		exit(1);
 	}
 }
 
 static int
-on_eom(uint64_t id, size_t size)
+on_msg_end(uint64_t id, size_t size)
 {
 	char	s_id[ID_STR_SZ];
 
 	(void)snprintf(s_id, sizeof(s_id), "%016"PRIx64"", id);
-	lua_getglobal(L, "on_eom");
+	lua_getglobal(L, "on_msg_end");
 	lua_pushstring(L, s_id);
 
 	if (lua_pcall(L, 1, 0, 0)) {
-		log_warnx("warn: on_eom: %s", lua_tostring(L, -1));
+		log_warnx("warn: on_msg_end: %s", lua_tostring(L, -1));
 		exit(1);
 	}
 
@@ -433,16 +433,16 @@ main(int argc, char **argv)
 		filter_api_on_data(on_data);
 	}
 
-	lua_getglobal(L, "on_dataline");
+	lua_getglobal(L, "on_msg_line");
 	if (lua_isfunction(L, 1)) {
-		log_debug("debug: on_dataline is present");
-		filter_api_on_dataline(on_dataline);
+		log_debug("debug: on_msg_line is present");
+		filter_api_on_msg_line(on_msg_line);
 	}
 
-	lua_getglobal(L, "on_eom");
+	lua_getglobal(L, "on_msg_end");
 	if (lua_isfunction(L, 1)) {
-		log_debug("debug: on_eom is present");
-		filter_api_on_eom(on_eom);
+		log_debug("debug: on_msg_end is present");
+		filter_api_on_msg_end(on_msg_end);
 	}
 
 	lua_getglobal(L, "on_tx_begin");

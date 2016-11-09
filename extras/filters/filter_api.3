@@ -27,8 +27,8 @@
 .Nm filter_api_on_mail ,
 .Nm filter_api_on_rcpt ,
 .Nm filter_api_on_data ,
-.Nm filter_api_on_dataline ,
-.Nm filter_api_on_eom ,
+.Nm filter_api_on_msg_line ,
+.Nm filter_api_on_msg_end ,
 .Nm filter_api_on_reset ,
 .Nm filter_api_on_disconnect ,
 .Nm filter_api_on_commit ,
@@ -65,9 +65,9 @@
 .Ft void
 .Fn filter_api_on_data "int(*cb)(uint64_t)"
 .Ft void
-.Fn filter_api_on_dataline "void(*cb)(uint64_t, const char *)"
+.Fn filter_api_on_msg_line "void(*cb)(uint64_t, const char *)"
 .Ft void
-.Fn filter_api_on_eom "int(*cb)(uint64_t, size_t)"
+.Fn filter_api_on_msg_end "int(*cb)(uint64_t, size_t)"
 .Ft void
 .Fn filter_api_on_reset "void(*cb)(uint64_t)"
 .Ft void
@@ -173,13 +173,13 @@ The callback might be used to set up message state data structures for
 filtering the upcoming DATA lines.
 .Pp
 The function
-.Fn filter_api_on_dataline
+.Fn filter_api_on_msg_line
 is called on each SMTP DATA line.
 The callback can be used to accept or reject messaged based on the (header or
 body) content of the current message.
 .Pp
 The function
-.Fn filter_api_on_eom
+.Fn filter_api_on_msg_end
 is called on the end (of DATA command) of the current message.
 The callback might be used to finalize the decision of accepting or rejecting
 the message.

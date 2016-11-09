@@ -44,11 +44,11 @@ static SIMPLEQ_HEAD(regex_q, regex)
 	regex_helo = SIMPLEQ_HEAD_INITIALIZER(regex_helo),
 	regex_mail = SIMPLEQ_HEAD_INITIALIZER(regex_mail),
 	regex_rcpt = SIMPLEQ_HEAD_INITIALIZER(regex_rcpt),
-	regex_dataline = SIMPLEQ_HEAD_INITIALIZER(regex_dataline);
+	regex_msg_line = SIMPLEQ_HEAD_INITIALIZER(regex_msg_line);
 static struct { const char *s; struct regex_q *rq; } regex_s[] = {
 	{ "connect", &regex_connect }, { "helo", &regex_helo },
 	{ "mail", &regex_mail }, { "rcpt", &regex_rcpt },
-	{ "dataline", &regex_dataline }, { NULL, NULL } };
+	{ "msg_line", &regex_msg_line }, { NULL, NULL } };
 static size_t regex_limit;
 
 static int
@@ -199,30 +199,30 @@ regex_on_rcpt(uint64_t id, struct mailaddr *r)
 }
 
 static void
-regex_on_dataline(uint64_t id, const char *l)
+regex_on_msg_line(uint64_t id, const char *l)
 {
 	struct { int m; size_t l; } *u;
 
 	filter_api_writeln(id, l);
 	if ((u = filter_api_get_udata(id)) == NULL) {
-		u = xcalloc(1, sizeof(*u), "on_dataline");
+		u = xcalloc(1, sizeof(*u), "on_msg_line");
 		filter_api_set_udata(id, u);
 	}
 	u->l += strlen(l);
 	if (u->m || (regex_limit && u->l >= regex_limit))
 		return;
-	u->m = regex_match(&regex_dataline, l);
+	u->m = regex_match(&regex_msg_line, l);
 }
 
 static int
-regex_on_eom(uint64_t id, size_t size)
+regex_on_msg_end(uint64_t id, size_t size)
 {
 	int *m;
 
 	if ((m = filter_api_get_udata(id)) == NULL)
 		return filter_api_accept(id);
 	if (*m) {
-		log_warnx("warn: session %016"PRIx64": on_eom: REJECT dataline", id);
+		log_warnx("warn: session %016"PRIx64": on_msg_end: REJECT msg_line", id);
 		return filter_api_reject_code(id, FILTER_CLOSE, 554, "5.7.1 Message content rejected");
 	}
 	return filter_api_accept(id);
@@ -289,8 +289,8 @@ main(int argc, char **argv)
 	filter_api_on_helo(regex_on_helo);
 	filter_api_on_mail(regex_on_mail);
 	filter_api_on_rcpt(regex_on_rcpt);
-	filter_api_on_dataline(regex_on_dataline);
-	filter_api_on_eom(regex_on_eom);
+	filter_api_on_msg_line(regex_on_msg_line);
+	filter_api_on_msg_end(regex_on_msg_end);
 	filter_api_on_tx_commit(regex_on_tx_commit);
 	filter_api_on_tx_rollback(regex_on_tx_rollback);
 
