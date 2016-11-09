@@ -117,15 +117,15 @@ dkim_signer_on_data(uint64_t id)
 }
 
 static void
-dkim_signer_on_dataline(uint64_t id, const char *line)
+dkim_signer_on_msg_line(uint64_t id, const char *line)
 {
 	struct dkim_signer *s;
 	struct entry *n;
 
 	if ((s = filter_api_get_udata(id)) == NULL)
 		return;
-	n = xmalloc(sizeof *n, "dkim_signer: on_dataline");
-	n->line = xstrdup(line, "dkim_signer: on_dataline");
+	n = xmalloc(sizeof *n, "dkim_signer: on_msg_line");
+	n->line = xstrdup(line, "dkim_signer: on_msg_line");
 	SIMPLEQ_INSERT_TAIL(&s->lines, n, entries);
 
 	/* first emptyline seperates headers and body */
@@ -160,7 +160,7 @@ dkim_signer_on_dataline(uint64_t id, const char *line)
 }
 
 static int
-dkim_signer_on_eom(uint64_t id, size_t size)
+dkim_signer_on_msg_end(uint64_t id, size_t size)
 {
 	struct dkim_signer *s;
 	struct entry *n;
@@ -168,7 +168,7 @@ dkim_signer_on_eom(uint64_t id, size_t size)
 	int dkim_sig_len, rsa_sig_len, r = 0;
 
 	if ((s = filter_api_get_udata(id)) == NULL) {
-		log_warnx("warn: on_eom: get_udata failed");
+		log_warnx("warn: on_msg_end: get_udata failed");
 		goto done;
 	}
 	/* empty body should be treated as a single CRLF */
@@ -178,7 +178,7 @@ dkim_signer_on_eom(uint64_t id, size_t size)
 	SHA256_Final(s->body_hash, &s->body_ctx);
 	if (base64_encode(s->body_hash, sizeof(s->body_hash),
 	    s->b64_body_hash, sizeof(s->b64_body_hash)) == -1) {
-		log_warnx("warn: on_eom: __b64_ntop failed");
+		log_warnx("warn: on_msg_end: __b64_ntop failed");
 		goto done;
 	}
 
@@ -188,26 +188,26 @@ dkim_signer_on_eom(uint64_t id, size_t size)
 	if ((dkim_sig_len = asprintf(&dkim_sig, DKIM_SIGNER_TEMPLATE,
 	    dkim_signer_domain, s->hdrs_list, dkim_signer_selector,
 	    s->b64_body_hash)) == -1) {
-		log_warn("warn: on_eom: asprintf failed");
+		log_warn("warn: on_msg_end: asprintf failed");
 		goto done;
 	}
 
 	SHA256_Update(&s->hdr_ctx, dkim_sig, dkim_sig_len);
 	SHA256_Final(s->hdr_hash, &s->hdr_ctx);
 
-	rsa_sig = xmalloc(RSA_size(dkim_signer_rsa), "dkim_signer: on_eom");
+	rsa_sig = xmalloc(RSA_size(dkim_signer_rsa), "dkim_signer: on_msg_end");
 	if (RSA_sign(NID_sha256, s->hdr_hash, sizeof(s->hdr_hash),
 	    rsa_sig, &rsa_sig_len, dkim_signer_rsa) == 0)
-		fatalx("dkim_signer: on_eom: RSA_sign");
+		fatalx("dkim_signer: on_msg_end: RSA_sign");
 
 	if (base64_encode(rsa_sig, rsa_sig_len, s->b64_rsa_sig,
 	    sizeof(s->b64_rsa_sig)) == -1) {
-		log_warnx("warn: on_eom: __b64_ntop failed");
+		log_warnx("warn: on_msg_end: __b64_ntop failed");
 		goto done;
 	}
 
 	if (asprintf(&dkim_header, "%s%s", dkim_sig, s->b64_rsa_sig) == -1) {
-		log_warn("warn: on_eom: asprintf failed");
+		log_warn("warn: on_msg_end: asprintf failed");
 		goto done;
 	}
 
@@ -307,8 +307,8 @@ main(int argc, char **argv)
 		fatalx("PEM_read_RSAPrivateKey");
 
 	filter_api_on_data(dkim_signer_on_data);
-	filter_api_on_dataline(dkim_signer_on_dataline);
-	filter_api_on_eom(dkim_signer_on_eom);
+	filter_api_on_msg_line(dkim_signer_on_msg_line);
+	filter_api_on_msg_end(dkim_signer_on_msg_end);
 	filter_api_on_tx_commit(dkim_signer_on_tx_commit);
 	filter_api_on_tx_rollback(dkim_signer_on_tx_rollback);
 	if (c)

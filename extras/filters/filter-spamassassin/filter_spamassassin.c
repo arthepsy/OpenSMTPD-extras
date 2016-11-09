@@ -219,7 +219,7 @@ spamassassin_on_data(uint64_t id)
 }
 
 static void
-spamassassin_on_dataline(uint64_t id, const char *l)
+spamassassin_on_msg_line(uint64_t id, const char *l)
 {
 	struct spamassassin *sa;
 
@@ -229,15 +229,15 @@ spamassassin_on_dataline(uint64_t id, const char *l)
 	}
 	sa->l += strlen(l);
 	if (spamassassin_limit && sa->l >= spamassassin_limit) {
-		log_info("info: on_dataline: limit reached");
-		log_warnx("warn: on_dataline: limit option not implemented");
+		log_info("info: on_msg_line: limit reached");
+		log_warnx("warn: on_msg_line: limit option not implemented");
 	}
-	iobuf_xfqueue(&sa->iobuf, "on_dataline", "%s\n", l);
+	iobuf_xfqueue(&sa->iobuf, "on_msg_line", "%s\n", l);
 	io_reload(&sa->io);
 }
 
 static int
-spamassassin_on_eom(uint64_t id, size_t size)
+spamassassin_on_msg_end(uint64_t id, size_t size)
 {
 	struct spamassassin *sa;
 
@@ -356,8 +356,8 @@ main(int argc, char **argv)
 	spamassassin_resolve(h, p);
 
 	filter_api_on_data(spamassassin_on_data);
-	filter_api_on_dataline(spamassassin_on_dataline);
-	filter_api_on_eom(spamassassin_on_eom);
+	filter_api_on_msg_line(spamassassin_on_msg_line);
+	filter_api_on_msg_end(spamassassin_on_msg_end);
 	filter_api_on_tx_commit(spamassassin_on_tx_commit);
 	filter_api_on_tx_rollback(spamassassin_on_tx_rollback);
 

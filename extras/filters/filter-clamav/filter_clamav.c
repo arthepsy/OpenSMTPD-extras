@@ -173,7 +173,7 @@ clamav_on_data(uint64_t id)
 }
 
 static void
-clamav_on_dataline(uint64_t id, const char *l)
+clamav_on_msg_line(uint64_t id, const char *l)
 {
 	struct clamav *cl;
 	uint32_t n = htonl(strlen(l) + 1);
@@ -182,13 +182,13 @@ clamav_on_dataline(uint64_t id, const char *l)
 	if ((cl = filter_api_get_udata(id)) == NULL)
 		return;
 	if (iobuf_queue(&cl->iobuf, &n, sizeof(uint32_t)) != (int)sizeof(uint32_t))
-		fatalx("on_dataline: iobuf_queue");
-	iobuf_xfqueue(&cl->iobuf, "on_dataline", "%s\n", l);
+		fatalx("on_msg_line: iobuf_queue");
+	iobuf_xfqueue(&cl->iobuf, "on_msg_line", "%s\n", l);
 	io_reload(&cl->io);
 }
 
 static int
-clamav_on_eom(uint64_t id, size_t size)
+clamav_on_msg_end(uint64_t id, size_t size)
 {
 	struct clamav *cl;
 	uint32_t n = htonl(0);
@@ -196,7 +196,7 @@ clamav_on_eom(uint64_t id, size_t size)
 	if ((cl = filter_api_get_udata(id)) == NULL)
 		return filter_api_accept(id);
 	if (iobuf_queue(&cl->iobuf, &n, sizeof(uint32_t)) != (int)sizeof(uint32_t))
-		fatalx("on_eom: iobuf_queue");
+		fatalx("on_msg_end: iobuf_queue");
 	io_reload(&cl->io);
 	cl->s++;
 	return 1; /* defer accept or reject */
@@ -289,8 +289,8 @@ main(int argc, char **argv)
 	clamav_resolve(h, p);
 
 	filter_api_on_data(clamav_on_data);
-	filter_api_on_dataline(clamav_on_dataline);
-	filter_api_on_eom(clamav_on_eom);
+	filter_api_on_msg_line(clamav_on_msg_line);
+	filter_api_on_msg_end(clamav_on_msg_end);
 	filter_api_on_tx_commit(clamav_on_tx_commit);
 	filter_api_on_tx_rollback(clamav_on_tx_rollback);
 
