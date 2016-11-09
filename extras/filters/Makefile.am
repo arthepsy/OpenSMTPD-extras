@@ -8,6 +8,10 @@ if HAVE_FILTER_DKIM_SIGNER
 SUBDIRS	+=	filter-dkim-signer
 endif
 
+if HAVE_FILTER_DNSBL
+SUBDIRS	+=	filter-dnsbl
+endif
+
 if HAVE_FILTER_MONKEY
 SUBDIRS	+=	filter-monkey
 endif

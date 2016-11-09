@@ -1021,6 +1021,19 @@ AC_ARG_WITH([filter-dkim-signer],
 )
 AM_CONDITIONAL([HAVE_FILTER_DKIM_SIGNER], [test $HAVE_FILTER_DKIM_SIGNER = yes])
 
+HAVE_FILTER_DNSBL=no
+AC_ARG_WITH([filter-dnsbl],
+	[  --with-filter-dnsbl	Enable filter dnsbl],
+	[
+		if test "x$withval" != "xno" ; then
+			AC_DEFINE([HAVE_FILTER_DNSBL], [1],
+				[Define if you have filter dnsbl])
+			HAVE_FILTER_DNSBL=yes
+		fi
+	]
+)
+AM_CONDITIONAL([HAVE_FILTER_DNSBL], [test $HAVE_FILTER_DNSBL = yes])
+
 HAVE_FILTER_MONKEY=no
 AC_ARG_WITH([filter-monkey],
 	[  --with-filter-monkey	Enable filter monkey],
@@ -1584,6 +1597,7 @@ AC_CONFIG_FILES([Makefile
 		extras/filters/Makefile
 		extras/filters/filter-clamav/Makefile
 		extras/filters/filter-dkim-signer/Makefile
+		extras/filters/filter-dnsbl/Makefile
 		extras/filters/filter-monkey/Makefile
 		extras/filters/filter-stub/Makefile
 		extras/filters/filter-trace/Makefile
