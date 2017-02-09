@@ -40,6 +40,10 @@ if HAVE_FILTER_RSPAMD
 SUBDIRS	+=	filter-rspamd
 endif
 
+if HAVE_FILTER_SPAMASSASSIN
+SUBDIRS	+=	filter-spamassassin
+endif
+
 if HAVE_FILTER_STUB
 SUBDIRS	+=	filter-stub
 endif
