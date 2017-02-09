@@ -1073,6 +1073,19 @@ AC_ARG_WITH([filter-pause],
 )
 AM_CONDITIONAL([HAVE_FILTER_PAUSE], [test $HAVE_FILTER_PAUSE = yes])
 
+HAVE_FILTER_PERL=no
+AC_ARG_WITH([filter-perl],
+	[  --with-filter-perl	Enable filter perl],
+	[
+		if test "x$withval" != "xno" ; then
+			AC_DEFINE([HAVE_FILTER_PERL], [1],
+				[Define if you have filter perl])
+			HAVE_FILTER_PERL=yes
+		fi
+	]
+)
+AM_CONDITIONAL([HAVE_FILTER_PERL], [test $HAVE_FILTER_PERL = yes])
+
 HAVE_FILTER_STUB=no
 AC_ARG_WITH([filter-stub],
 	[  --with-filter-stub	Enable filter stub],
@@ -1627,6 +1640,7 @@ AC_CONFIG_FILES([Makefile
 		extras/filters/filter-lua/Makefile
 		extras/filters/filter-monkey/Makefile
 		extras/filters/filter-pause/Makefile
+		extras/filters/filter-perl/Makefile
 		extras/filters/filter-stub/Makefile
 		extras/filters/filter-trace/Makefile
 		extras/filters/filter-void/Makefile
